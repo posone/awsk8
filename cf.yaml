@@ -8,10 +8,6 @@ Parameters:
     Description: Put the name of S3
 
 Resources:
-  ArtifactStoreBucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: s3
-
   S3BUCKET:
     Type: AWS::SSM::Parameter
     Properties:
