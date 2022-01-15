@@ -11,34 +11,18 @@ Resources:
   S3BUCKET:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: Put the name of the Git2S3 bucket with IaaC
+      Description: Put the name of the bucket with IaaC
       Name: S3BUCKET
       Type: "String"
       Value: !Ref S3BucketName
 
-  STAGE:
+  BUILDNAME:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: Put the name of the Git2S3 bucket with IaaC
-      Name: STAGE
+      Description: Name of the CodeBuild
+      Name: BUILDNAME
       Type: "String"
-      Value: unit_tests
-
-  COVBUILD:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: Name of the CF covqstack Build
-      Name: COVBUILD
-      Type: "String"
-      Value: CovqRunCPG
-
-  COVPROJECT:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: Name of the covqrun CodeBuild project
-      Name: COVPROJECT
-      Type: "String"
-      Value: !Sub CfCovqRunCPG-${AWS::StackName}
+      Value: !Sub CF-${AWS::StackName}
 
   USER:
     Type: AWS::SSM::Parameter
@@ -53,16 +37,8 @@ Resources:
     Properties:
       Name: IMAGE
       Type: String
-      Value: "covqspeccpg"
+      Value: "kopsimage"
       Description: Image for docker build
-
-  TZ:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: TZ
-      Type: String
-      Value: "Europe/Berlin"
-      Description: TimeZone for docker images
 
   ECRURL:
     Type: AWS::SSM::Parameter
@@ -79,6 +55,16 @@ Resources:
       Type: String
       Value: "devopsrepo"
       Description: Name of the ECR repository
+
+  DevopsVPC:
+  Type: AWS::EC2::VPC
+  Properties:
+    CidrBlock: 10.1.0.0/16
+    EnableDnsSupport: 'true'
+    EnableDnsHostnames: 'true'
+    Tags:
+     - Key: project
+       Value: devops    
 
   ECRRepo:
     Type: AWS::ECR::Repository
@@ -112,7 +98,7 @@ Resources:
               Service: ecs-tasks.amazonaws.com
             Action: "sts:AssumeRole"
 
-  CovSecurityGroup:
+  CodeBuildSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
       GroupName: !Sub "${AWS::StackName}-codebuild"
@@ -122,7 +108,7 @@ Resources:
           IpProtocol: "tcp"
           FromPort: "0"
           ToPort: "65535"
-      VpcId: !Ref VpcName
+      VpcId: !Ref DevopsVPC
 
   CodeBuildPolicy:
     Type: AWS::IAM::Policy
@@ -220,12 +206,12 @@ Resources:
           - CodeBuild
     Type: AWS::IAM::Role
 
-  CfBuildDockerCPG:
+  BuildImage:
     DependsOn:
       - CodeBuildPolicy
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: !Sub CfBuildDockerCPG-${AWS::StackName}
+      Name: !Sub BuildImage-${AWS::StackName}
       Description: Build specific docker image and push it to ECR
       ServiceRole:
         Fn::GetAtt:
@@ -251,225 +237,12 @@ Resources:
         #!Sub "${S3BucketName}/drd-computational-chemistry/devops-cpg/devopscpg/drd-computational-chemistry_devops-cpg.zip"
         BuildSpec: build/buildspec.yml
       VpcConfig:
-        VpcId: !Ref VpcName
+        VpcId: !Ref DevopsVPC
         SecurityGroupIds:
           - !Ref CovSecurityGroup
         Subnets:
           - !Ref SubName
-          #- !Sub "cov-network-${VpcName}-${CodeBuildSubnetType}-subnet-c" sharedvpccpg-intranet-b
+          #- !Sub "cov-network-${DevopsVPC}-${CodeBuildSubnetType}-subnet-c" sharedvpccpg-intranet-b
       Triggers:
         Webhook: false
   #execution role for codebuild CovqRun
-  CfCovqRunCPG:
-    DependsOn:
-      - CodeBuildPolicy
-    Type: AWS::CodeBuild::Project
-    Properties:
-      Name: !Sub CfCovqRunCPG-${AWS::StackName}
-      Description: Build CfCovqRunCPG Project
-      ServiceRole:
-        Fn::GetAtt:
-          - CodeBuildRole
-          - Arn
-      Environment:
-        Image: temp #612329472750.dkr.ecr.eu-central-1.amazonaws.com/devops-cpg:unit_tests-20211207T095712 #no image on new instance
-        ComputeType: "BUILD_GENERAL1_SMALL"
-        Type: LINUX_CONTAINER
-        PrivilegedMode: true
-        ImagePullCredentialsType: SERVICE_ROLE
-      Source:
-        Type: S3
-        Location: !Join
-          - "/"
-          - - !Ref S3BucketName
-            - !Ref Projectname
-            - !Ref Reponame
-            - !Ref Branch
-            - !Sub "${Projectname}_devops-cpg.zip"
-        BuildSpec: covq/covqspec.yml
-      VpcConfig:
-        VpcId: !Ref VpcName
-        SecurityGroupIds:
-          - !Ref CovSecurityGroup
-        Subnets:
-          - !Ref SubName
-        #- !Sub "cov-network-${VpcName}-${CodeBuildSubnetType}-subnet-c" sharedvpccpg-intranet-b
-      Artifacts:
-        Type: NO_ARTIFACTS
-      LogsConfig:
-        CloudWatchLogs:
-          Status: ENABLED
-        S3Logs:
-          Status: DISABLED
-          EncryptionDisabled: false
-  #CodePipeline
-  CodePipelinePolicy:
-    Type: AWS::IAM::Policy
-    Description: Setting IAM policy for service role for
-    Properties:
-      PolicyName: !Join
-        - "-"
-        - - !Ref "AWS::StackName"
-          - CodePipelinePolicy
-      Roles:
-        - !Ref "CodePipelineRole"
-      PolicyDocument:
-        Statement:
-          - Action:
-              - codebuild:UpdateProject
-              - Codebuild:*
-            Effect: Allow
-            Resource: "*"
-          - Action:
-              - logs:CreateLogGroup
-              - logs:CreateLogStream
-              - logs:PutLogEvents
-              - logs:GetLogEvents
-            Effect: Allow
-            Resource: "*"
-          - Action:
-              - ssm:GetSecretValue
-              - ssm:GetParameters
-              - ssm:GetParameter
-            Resource: "*"
-            Effect: Allow
-          - Action:
-              - codepipeline:GetPipelineExecution
-              - codepipeline:GetPipeline
-              - codepipeline:StartPipelineExecution
-              - codepipeline:*
-            Effect: Allow
-            Resource: "*"
-          - Action:
-              - s3:GetObject
-              - s3:GetObjectVersion
-              - s3:PutObject
-              - s3:GetBucketAcl
-              - s3:GetBucketLocation
-              - s3:*
-            Effect: Allow
-            Resource: "*"
-          - Action:
-              - ecr:BatchCheckLayerAvailability
-              - ecr:GetDownloadUrlForLayer
-              - ecr:BatchGetImage
-              - ecr:PutImage
-              - ecr:InitiateLayerUpload
-              - ecr:UploadLayerPart
-              - ecr:CompleteLayerUpload
-              - ecr:GetAuthorizationToken
-            Effect: Allow
-            Resource: "*"
-          - Action:
-              - s3:PutObject
-              - s3:GetObject
-              - s3:GetObjectVersion
-              - iam:PassRole
-            Effect: Allow
-            Resource: "*"
-          - Action:
-              - codebuild:StartBuild
-              - codebuild:StopBuild
-              - codebuild:RetryBuild
-            Effect: Allow
-            Resource: "*"
-          - Action:
-              - secretsmanager:*
-            Effect: Allow
-            Resource: "*"
-  CodePipelineRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub CodePipelineRole-${AWS::StackName}
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - codepipeline.amazonaws.com
-            Action:
-              - "sts:AssumeRole"
-      Path: /service-role/
-
-  #  ArtifactStore:
-  #    Type: AWS::S3::Bucket
-  #    DeletionPolicy: Delete
-  #    Properties:
-  #      BucketName: cov-devops-cfartifact
-  #      VersioningConfiguration:
-  #        Status: Enabled
-
-  CFPipelineCPG:
-    DependsOn:
-      - CodePipelinePolicy
-    Type: AWS::CodePipeline::Pipeline
-    Properties:
-      Name: !Sub CFPipelineCPG-${AWS::StackName}
-      RoleArn: !GetAtt CodePipelineRole.Arn
-      ArtifactStore:
-        Type: S3
-        Location: !Ref ArtifactStoreBucket
-      Stages:
-        - Name: Source
-          Actions:
-            - Name: CFSourceRepo
-              ActionTypeId:
-                Category: Source
-                Owner: AWS
-                Provider: S3
-                Version: "1"
-              Configuration:
-                S3Bucket: !Ref S3BucketName
-                S3ObjectKey: !Join
-                  - "/"
-                  - - !Ref Projectname
-                    - !Ref Reponame
-                    - !Ref Branch
-                    - !Sub "${Projectname}_devops-cpg.zip"
-                PollForSourceChanges: true
-              OutputArtifacts:
-                - Name: CFSourceRepo
-              RunOrder: 1
-            - Name: CFSourceFile
-              ActionTypeId:
-                Category: Source
-                Owner: AWS
-                Provider: S3
-                Version: "1"
-              Configuration:
-                S3Bucket: !Ref S3BucketName
-                S3ObjectKey: MergeRequestLogs/MergeLogs.zip
-                PollForSourceChanges: false
-              OutputArtifacts:
-                - Name: SourceArtifact
-              RunOrder: 1
-        - Name: Build
-          Actions:
-            - Name: Build
-              InputArtifacts:
-                - Name: CFSourceRepo
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Provider: CodeBuild
-                Version: "1"
-              OutputArtifacts:
-                - Name: MyBuildArtifact
-              Configuration:
-                ProjectName: !Ref CfCovqRunCPG
-              RunOrder: 1
-
-    #SNS Pipeline Notification
-  NotifyTriggerSNS:
-    Type: "AWS::CodeStarNotifications::NotificationRule"
-    Properties:
-      Name: "My Notification Rule for Lambda GitToS3"
-      DetailType: FULL
-      Resource: "arn:aws:codepipeline:eu-central-1:612329472750:CFPipelineCPG-${AWS::StackName}"
-      EventTypeIds:
-        - codepipeline-pipeline-action-execution-succeeded
-        - codepipeline-pipeline-action-execution-failed
-      Targets:
-        - TargetType: SNS
-          TargetAddress: "arn:aws:sns:eu-central-1:612329472750:SC-612329472750-pp-twhpa36nmx2y6-PipelineNotificationSNSTopic-1JK28XQDYTB76"

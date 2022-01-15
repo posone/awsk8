@@ -3,6 +3,7 @@ Automate k8 on ec2 with CF + kops
 
 # initial plan:
 - use ansible or terraform?
+- github integration - public repo/token/oauth?
 - how to put data on s3 which is not created?
 - how to remove s3 after all?
 - how to remove the s3 and other components?
