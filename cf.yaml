@@ -22,7 +22,7 @@ Resources:
       Description: Name of the CodeBuild
       Name: BUILDNAME
       Type: "String"
-      Value: !Sub CF-${AWS::StackName}
+      Value: !Sub CodeBuild-${AWS::StackName}
 
   USER:
     Type: AWS::SSM::Parameter
@@ -57,14 +57,14 @@ Resources:
       Description: Name of the ECR repository
 
   DevopsVPC:
-  Type: AWS::EC2::VPC
-  Properties:
-    CidrBlock: 10.1.0.0/16
-    EnableDnsSupport: 'true'
-    EnableDnsHostnames: 'true'
-    Tags:
-     - Key: project
-       Value: devops    
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.1.0.0/16
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      Tags:
+        - Key: project
+          Value: devops    
 
   ECRRepo:
     Type: AWS::ECR::Repository
@@ -226,22 +226,16 @@ Resources:
         Type: LINUX_CONTAINER
       QueuedTimeoutInMinutes: 60
       Source:
-        Type: S3
-        Location: !Join
-          - "/"
-          - - !Ref S3BucketName
-            - !Ref Projectname
-            - !Ref Reponame
-            - !Ref Branch
-            - !Sub "${Projectname}_devops-cpg.zip"
+        Type: GITHUB
+        Location: https://github.com/posone/awsk8.git
         #!Sub "${S3BucketName}/drd-computational-chemistry/devops-cpg/devopscpg/drd-computational-chemistry_devops-cpg.zip"
         BuildSpec: build/buildspec.yml
-      VpcConfig:
-        VpcId: !Ref DevopsVPC
-        SecurityGroupIds:
-          - !Ref CovSecurityGroup
-        Subnets:
-          - !Ref SubName
+#      VpcConfig:
+#        VpcId: !Ref DevopsVPC
+#        SecurityGroupIds:
+#         - !Ref CodeBuildSecurityGroup
+#       Subnets:
+#          - !Ref SubName
           #- !Sub "cov-network-${DevopsVPC}-${CodeBuildSubnetType}-subnet-c" sharedvpccpg-intranet-b
       Triggers:
         Webhook: false

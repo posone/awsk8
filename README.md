@@ -8,6 +8,9 @@ Automate k8 on ec2 with CF + kops
 - how to remove s3 after all?
 - how to remove the s3 and other components?
 
+# aws cf command:
+aws cloudformation deploy --stack-name posone-cf --template-file cf.yaml --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset --profile posone
+
 -------
 Call cloudformation task from Ansible
 CFN creates the bucket and in the Outputs exports the bucket name
