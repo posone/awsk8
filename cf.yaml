@@ -229,7 +229,7 @@ Resources:
         Type: GITHUB
         Location: https://github.com/posone/awsk8.git
         #!Sub "${S3BucketName}/drd-computational-chemistry/devops-cpg/devopscpg/drd-computational-chemistry_devops-cpg.zip"
-        BuildSpec: build/buildspec.yml
+        BuildSpec: build/buildspec.yaml
 #      VpcConfig:
 #        VpcId: !Ref DevopsVPC
 #        SecurityGroupIds:
