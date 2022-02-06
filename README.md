@@ -11,6 +11,7 @@ Automate k8 on ec2 with CF + kops
 # aws cf command:
 aws cloudformation deploy --stack-name posone-cf --template-file cf.yaml --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset --profile posone
 
+aws cloudformation delete-stack --stack-name posone-cf  --profile posone
 -------
 Call cloudformation task from Ansible
 CFN creates the bucket and in the Outputs exports the bucket name
