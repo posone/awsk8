@@ -14,9 +14,8 @@ phases:
       - export NAME=posone-kops-cluster.k8s.local
       - export KOPS_STATE_PREFIX=posone-kops-$(uuidgen)
       - export KOPS_STATE_STORE=s3://${KOPS_STATE_PREFIX}
-      - export AWS_REGION=eu-west-1
-      - |
-        export AWS_REGION_AZS=$(aws ec2 describe-availability-zones --region ${AWS_REGION} --query 'AvailabilityZones[0:3].ZoneName' --output text | sed 's/\t/,/g')
+      - export AWS_REGION=eu-central-1
+      - export AWS_REGION_AZS=$(aws ec2 describe-availability-zones --region $AWS_REGION --query 'AvailabilityZones[0:3].ZoneName' --output text | sed 's/\t/,/g')
     finally:
       - echo This always runs even if the update or install command fails 
   build:
@@ -24,3 +23,5 @@ phases:
       - pwd; ls -la
       - kops version
       - echo ${NAME} ${KOPS_STATE_PREFIX} ${KOPS_STATE_STORE} ${AWS_REGION} ${AWS_REGION_AZS}
+      - echo "000000000000"
+      - aws ec2 describe-availability-zones --region $AWS_REGION --query 'AvailabilityZones[0:3].ZoneName' --output text | sed 's/\t/,/g'
