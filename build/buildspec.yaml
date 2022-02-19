@@ -19,6 +19,11 @@ phases:
       - export AWS_REGION_AZS=$(aws ec2 describe-availability-zones --region $AWS_REGION --query 'AvailabilityZones[0:3].ZoneName' --output text | sed 's/\t/,/g')
     finally:
       - echo This always runs even if the update or install command fails 
+  pre-build:
+    commands:
+      - aws s3api create-bucket --bucket ${KOPS_STATE_PREFIX} --region ${AWS_REGION} --create-bucket-configuration LocationConstraint=${AWS_REGION}
+      - aws s3 ls
+  
   build:
     commands:
       - pwd; ls -la
