@@ -3,7 +3,7 @@ env:
   variables:
     NAME: "posone-kops-cluster.k8s.local"
     KOPS_STATE_PREFIX: "posone-kops-bucket"
-    KOPS_STATE_STORE: "s3://${KOPS_STATE_PREFIX}"
+    KOPS_STATE_STORE: "s3://$KOPS_STATE_PREFIX"
 
 phases:
   install:
