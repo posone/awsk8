@@ -22,6 +22,5 @@ phases:
   
   build:
     commands:
-      - aws s3 rm ${KOPS_STATE_PREFIX} --recursive
       - aws s3api delete-bucket --bucket ${KOPS_STATE_PREFIX} --region $AWS_REGION
       - aws s3 ls
