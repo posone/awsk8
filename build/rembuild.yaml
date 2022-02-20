@@ -22,9 +22,6 @@ phases:
   
   build:
     commands:
-      - aws s3api create-bucket --bucket ${KOPS_STATE_PREFIX} --region ${AWS_REGION} --create-bucket-configuration LocationConstraint=${AWS_REGION}
+      - aws s3 rm ${KOPS_STATE_PREFIX} --recursive
+      - aws s3api delete-bucket --bucket ${KOPS_STATE_PREFIX} --region $AWS_REGION
       - aws s3 ls
-      - pwd; ls -la
-      - kops version
-      - echo ${NAME} ${KOPS_STATE_PREFIX} ${KOPS_STATE_STORE} ${AWS_REGION} ${AWS_REGION_AZS}
-      - echo "000000000000"

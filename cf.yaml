@@ -215,7 +215,7 @@ Resources:
     Type: AWS::CodeBuild::Project
     Properties:
       Name: !Sub BuildImage-${AWS::StackName}
-      Description: Build specific docker image and push it to ECR
+      Description: Install kops, create s3 bucket and create kops k8 cluster
       ServiceRole:
         Fn::GetAtt:
           - CodeBuildRole
@@ -243,3 +243,29 @@ Resources:
       Triggers:
         Webhook: false
   #execution role for codebuild CovqRun
+
+  RemBuild:
+    DependsOn:
+      - CodeBuildPolicy
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub RemBuild-${AWS::StackName}
+      Description: Remove s3 bucket and kops cluster
+      ServiceRole:
+        Fn::GetAtt:
+          - CodeBuildRole
+          - Arn
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        ComputeType: "BUILD_GENERAL1_SMALL"
+        PrivilegedMode: true
+        Image: "aws/codebuild/standard:5.0"
+        Type: LINUX_CONTAINER
+      QueuedTimeoutInMinutes: 60
+      Source:
+        Type: GITHUB
+        Location: https://github.com/posone/awsk8.git
+        BuildSpec: build/rembuild.yaml
+      Triggers:
+        Webhook: false
