@@ -3,6 +3,7 @@ env:
   variables:
     NAME: "posone-kops-cluster.k8s.local"
     KOPS_STATE_PREFIX: "posone-kops-bucket"
+    REMOVE: "NO"
 phases:
   install:
     commands:
@@ -28,3 +29,12 @@ phases:
       - kops version
       - echo ${NAME} ${KOPS_STATE_PREFIX} ${KOPS_STATE_STORE} ${AWS_REGION} ${AWS_REGION_AZS}
       - echo "000000000000"
+
+  post_build:
+    commands:
+      - |
+      if [ "$REMOVE" = "YES" ] ; then
+        echo "I am removing kops"
+      else
+        echo "Do nothing"
+      fi
