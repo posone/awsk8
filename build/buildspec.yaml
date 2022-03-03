@@ -37,7 +37,6 @@ phases:
         --master-size m5.large \
         --master-count 1 \
         --master-zones ${AWS_REGION_AZS} \
-#if define one master - one zone only        
         --zones ${AWS_ONE_ZONE} \
         --node-size t3.large \
         --node-count 2 \
