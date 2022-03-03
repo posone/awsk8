@@ -156,6 +156,10 @@ Resources:
             Effect: Allow
             Resource: "*"
           - Action:
+              - application-autoscaling:*
+            Effect: Allow
+            Resource: "*"
+          - Action:
               - vpc:*
             Effect: Allow
             Resource: "*"
