@@ -43,6 +43,6 @@ phases:
       - aws s3 ls --recursive ${KOPS_STATE_STORE}
       - kops update cluster --state=${KOPS_STATE_STORE} --name=${NAME} --yes --admin
       - kops validate cluster --wait 10m
-      - aws s3 cp ~/.kube/config s3://${KOPS_STATE_PREFIX}/kubeconfig
-      - aws s3 cp ~/.ssh/id_rsa s3://${KOPS_STATE_PREFIX}/priv_key
+      - aws s3 cp ~/.kube/config ${KOPS_STATE_STORE}/kubeconfig
+      - aws s3 cp ~/.ssh/id_rsa ${KOPS_STATE_STORE}/priv_key
       
