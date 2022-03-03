@@ -17,6 +17,7 @@ phases:
       - mv kops-linux-amd64 /usr/local/bin/kops
       - export KOPS_STATE_STORE="s3://${KOPS_STATE_PREFIX}"
       - export AWS_REGION_AZS=$(aws ec2 describe-availability-zones --region $AWS_REGION --query 'AvailabilityZones[0:3].ZoneName' --output text | sed 's/\t/,/g')
+      - export AWS_ONE_ZONE=$(echo $AWS_REGION_AZS| cut -d ',' -f1)
     finally:
       - echo This always runs even if the update or install command fails 
   
@@ -26,7 +27,7 @@ phases:
       - aws s3 ls
       - pwd; ls -la
       - kops version
-      - echo ${NAME} ${KOPS_STATE_PREFIX} ${KOPS_STATE_STORE} ${AWS_REGION} ${AWS_REGION_AZS}
+      - echo ${NAME} ${KOPS_STATE_PREFIX} ${KOPS_STATE_STORE} ${AWS_REGION} ${AWS_ONE_ZONE}  ${AWS_REGION_AZS}
       - echo "000000000000"
       - |
         kops create cluster \
@@ -36,7 +37,8 @@ phases:
         --master-size m5.large \
         --master-count 1 \
         --master-zones ${AWS_REGION_AZS} \
-        --zones ${AWS_REGION_AZS} \
+#if define one master - one zone only        
+        --zones ${AWS_ONE_ZONE} \
         --node-size t3.large \
         --node-count 2 \
         --dns private 
