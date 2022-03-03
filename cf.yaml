@@ -140,28 +140,19 @@ Resources:
             Resource: "*"
             Effect: Allow
           - Action:
-              - ec2:CreateNetworkInterface
-              - ec2:DescribeDhcpOptions
-              - ec2:DescribeNetworkInterfaces
-              - ec2:DeleteNetworkInterface
-              - ec2:DescribeSubnets
-              - ec2:DescribeSecurityGroups
-              - ec2:DescribeSecurityGroupRules
-              - ec2:DescribeAvailabilityZones
-              - ec2:CreateSecurityGroup
-              - ec2:DescribeVpcs
-              - ec2:CreateNetworkInterfacePermission
+              - ec2:*
             Effect: Allow
             Resource: "*"
           - Action:
-              - s3:CreateBucket
-              - s3:DeleteBucket
-              - s3:ListAllMyBuckets
-              - s3:GetObject
-              - s3:GetObjectVersion
-              - s3:PutObject
-              - s3:GetBucketAcl
-              - s3:GetBucketLocation
+              - s3:*
+            Effect: Allow
+            Resource: "*"
+          - Action:
+              - iam:*
+            Effect: Allow
+            Resource: "*"
+          - Action:
+              - vpc:*
             Effect: Allow
             Resource: "*"
           - Action:
@@ -173,12 +164,6 @@ Resources:
               - ecr:UploadLayerPart
               - ecr:CompleteLayerUpload
               - ecr:GetAuthorizationToken
-            Effect: Allow
-            Resource: "*"
-          - Action:
-              - s3:PutObject
-              - s3:GetObject
-              - s3:GetObjectVersion
             Effect: Allow
             Resource: "*"
           - Action:
