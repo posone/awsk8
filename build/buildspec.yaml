@@ -36,7 +36,7 @@ phases:
         --cloud aws \
         --master-size m5.large \
         --master-count 1 \
-        --master-zones ${AWS_REGION_AZS} \
+        --master-zones ${AWS_ONE_ZONE} \
         --zones ${AWS_ONE_ZONE} \
         --node-size t3.large \
         --node-count 2 \
