@@ -34,3 +34,7 @@ You can create a lambda function to clean up your bucket and invoke your lambda 
 
 -------
 
+Sample app:
+kubectl create deployment my-nginx --image=nginx --replicas=1 --port=80;
+kubectl expose deployment my-nginx -> will be available through cluster port 
+kubectl expose deployment my-nginx --port=80 --type=LoadBalancer; -> will not work because there is no external DNS
