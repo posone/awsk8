@@ -39,7 +39,7 @@ phases:
         --master-zones ${AWS_ONE_ZONE} \
         --zones ${AWS_ONE_ZONE} \
         --node-size t3.large \
-        --node-count 2 \
+        --node-count 1 \
         --dns private 
       - aws s3 ls --recursive ${KOPS_STATE_STORE}
       - kops update cluster --state=${KOPS_STATE_STORE} --name=${NAME} --yes --admin
